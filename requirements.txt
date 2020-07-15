@@ -1,0 +1,2 @@
+git+https://github.com/fastforwardlabs/cmlbootstrap#egg=cmlbootstrap
+scikit-learn
