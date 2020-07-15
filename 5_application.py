@@ -106,9 +106,13 @@ features.remove('Class')
 access_key = "mperto28a8xnul81g7w58xvy3qbplerw";
 
 # helper functions
+model_host = os.getenv("CDSW_API_URL").split(
+    ":")[0] + "://modelservice." + os.getenv("CDSW_DOMAIN") 
+
+# helper functions
 def get_prediction_from_model(d):
   r = requests.post(
-    'http://modelservice.ml-2f4cffbb-91e.demo-aws.ylcu-atmi.cloudera.site/model', 
+    model_host + '/model', 
     data='{{"accessKey":"{}","request":{}}}'.format(access_key,json.dumps(reformat_sample_for_model(d))), 
     headers={'Content-Type': 'application/json'})
   return r.json()["response"]["result"]
