@@ -43,7 +43,7 @@
 #
 # Next, add that access key to `accesskey` variable below.
 #
-# `access_key = "mva4xq8t7prim32i0y0258pof6tvu8ci";
+# `access_key = "mperto28a8xnul81g7w58xvy3qbplerw";
 #
 # Finally, go to the *Applications* section of the Project and select *New Application* with the following:
 # * **Name**: Churn Analysis App
@@ -71,7 +71,6 @@
 
 import os.path
 from shutil import copy
-import dill
 import logging
 import dash
 import dash_core_components as dcc
@@ -97,7 +96,7 @@ except:
 features = list(data.columns.values)
 features.remove('Class')
 
-access_key = "mva4xq8t7prim32i0y0258pof6tvu8ci";
+access_key = "mperto28a8xnul81g7w58xvy3qbplerw";
 
 # helper functions
 def get_prediction_from_model(d):

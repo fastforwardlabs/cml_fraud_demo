@@ -229,39 +229,44 @@ with torch.no_grad():
     pd.Series(loss2.numpy()).hist(bins=100)
 
 
-def precise_rate(split_point):
+def precision_rate(split_point):
     rate1=(loss1<split_point).sum().item()/float(len(loss1))
     rate2=(loss2>split_point).sum().item()/float(len(loss2))
     return (rate1+rate2)/2            
 
-def find_split_point(start,end,start_precise,end_precise):
+def find_split_point(start,end,start_precision,end_precision):
     print(start,'->',end)
     delta=(end-start)/4.0
-    precise=[start_precise]
-    precise+=[precise_rate(start+i*delta) for i in range(1,4)]
-    precise+=[end_precise]
+    precision=[start_precision]
+    precision+=[precision_rate(start+i*delta) for i in range(1,4)]
+    precision+=[end_precision]
 
-    i = 0 if sum(precise[0:3])>sum(precise[1:4]) else 1
-    j = i if sum(precise[i:i+3])>sum(precise[2:5]) else 2
+    i = 0 if sum(precision[0:3])>sum(precision[1:4]) else 1
+    j = i if sum(precision[i:i+3])>sum(precision[2:5]) else 2
 
     if end-start>0.01:
-        return find_split_point(start+j*delta,start+(j+2)*delta,precise[j],precise[j+2])
+        return find_split_point(start+j*delta,start+(j+2)*delta,precision[j],precision[j+2])
     else:
-        return start+delta*np.argmax(precise)
+        return start+delta*np.argmax(precision)
 
 
 (start,end)=(loss1.max().item(),loss2.min().item())
 (start,end)=(start,end) if start<end else (end,start)
-split_point=find_split_point(start,end,precise_rate(start),precise_rate(end))
+split_point=find_split_point(start,end,precision_rate(start),precision_rate(end))
 print('\nSplit point:',split_point)
+
+# Update the deployed model split point
+import subprocess
+subprocess.call(["sed", "-i",  's/split_point=.*/split_point=' + str(round(split_point,3)) + "/ ", "/home/cdsw/4_model_deploy.py"])
+
 
 # model precision rate
 
-precise1=(loss1<split_point).sum().item()/float(len(loss1))
-precise2=(loss2>split_point).sum().item()/float(len(loss2))
-print('Precision rate for normal cases:',precise1)
-print('Precision rate for fraud cases:',precise2)
-print('Overall precision:',(precise1+precise2)/2)
+precision1=(loss1<split_point).sum().item()/float(len(loss1))
+precision2=(loss2>split_point).sum().item()/float(len(loss2))
+print('Precision rate for normal cases:',precision1)
+print('Precision rate for fraud cases:',precision2)
+print('Overall precision:',(precision1+precision2)/2)
 
 torch.save(model.state_dict(), 'model/creditcard-fraud.model')
 
@@ -269,7 +274,7 @@ torch.save(model.state_dict(), 'model/creditcard-fraud.model')
 # If running as as experiment, this will track the metrics and add the model trained in this 
 # training run to the experiment history.
 cdsw.track_metric("split_point",round(split_point,2))
-cdsw.track_metric("precision",round(((precise1+precise2)/2),2))
+cdsw.track_metric("precision",round(((precision1+precision2)/2),2))
 cdsw.track_file('creditcard-fraud.model')
 
 

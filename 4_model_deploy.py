@@ -133,7 +133,7 @@ class autoencoder(nn.Module):
         return x
 
 num_features=30
-split_point=-1.15
+split_point=-1.094
 
 import joblib
 scaler=joblib.load('model/cc_scaler.pkl')

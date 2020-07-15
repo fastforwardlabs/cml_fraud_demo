@@ -2,6 +2,7 @@
 
 ### Install the requirements
 !bash cdsw-build.sh
+!pip3 install dash
 
 ### Download the data file and save it in the specified directory
 
