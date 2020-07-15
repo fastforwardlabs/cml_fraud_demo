@@ -275,7 +275,8 @@ torch.save(model.state_dict(), 'model/creditcard-fraud.model')
 # training run to the experiment history.
 cdsw.track_metric("split_point",round(split_point,2))
 cdsw.track_metric("precision",round(((precision1+precision2)/2),2))
-cdsw.track_file('creditcard-fraud.model')
+cdsw.track_file('model/creditcard-fraud.model')
+cdsw.track_file('model/cc_scaler.pkl')
 
 
 
