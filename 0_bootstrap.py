@@ -45,7 +45,7 @@ except:
 
 # Upload the data to the cloud storage
 
-!unzip -o data/creditcardfraud.zip
+!unzip data/creditcardfraud.zip -d data
 
 !hdfs dfs -mkdir -p $STORAGE/datalake
 !hdfs dfs -mkdir -p $STORAGE/datalake/data
