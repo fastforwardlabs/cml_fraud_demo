@@ -6,6 +6,16 @@
 
 # Create the directories and upload data
 
+!unzip data/creditcardfraud.zip -d data
+
+!hdfs dfs -mkdir -p $STORAGE/datalake
+!hdfs dfs -mkdir -p $STORAGE/datalake/data
+!hdfs dfs -mkdir -p $STORAGE/datalake/data/anomalydetection
+!hdfs dfs -copyFromLocal /home/cdsw/data/creditcard.csv $STORAGE/datalake/data/anomalydetection/creditcard.csv
+
+!rm /home/cdsw/data/creditcard.csv
+
+# build the project
 from cmlbootstrap import CMLBootstrap
 from IPython.display import Javascript, HTML
 import os
