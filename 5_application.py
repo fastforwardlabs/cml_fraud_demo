@@ -88,11 +88,18 @@ spark = SparkSession\
     .getOrCreate()
 
 try:
-    spark_df = spark.sql("SELECT * FROM default.cc_data limit 1000")
-    data = spark_df.toPandas()
+    spark_df = spark.sql("SELECT * FROM default.cc_data")
+    class1_df = spark_df.filter("Class == 1")
+    class0_df = spark_df.filter("Class == 0").limit(2000)
+    sample_df = class1_df.union(class0_df)
+    data = sample_df.toPandas()
 except:
-    data = pd.read_csv("/home/cdsw/data/creditcardfraud.zip",nrows=1000)
-
+    all_data = pd.read_csv("/home/cdsw/data/creditcardfraud.zip")
+    class1_pdf = all_data[all_data.Class == 1]
+    class0_pdf = all_data[all_data.Class == 0].iloc[:2000]
+    data_ = class1_pdf.append(class0_pdf)
+    
+    
 features = list(data.columns.values)
 features.remove('Class')
 
@@ -106,35 +113,6 @@ def get_prediction_from_model(d):
     headers={'Content-Type': 'application/json'})
   return r.json()["response"]["result"]
 
-def format_values(val):
-    if type(val) is bool:
-        return str(val)
-    elif type(val) is str:
-        return val
-    elif val % 1 == 0:
-        return str(int(val))
-    else:
-        return '{:.3f}'.format(val)
-
-def format_sample(data, desc):
-    out = data[features].to_dict()
-    out['description'] = desc
-    out['isFraud'] = data['Class'] == 1
-    out['predict'] = data['prediction']
-    return out
-
-def make_table(args):
-    table = html.Table(children=[])
-    table.children.append(
-        html.Tr(children=[html.Th(children=col) for col in features])
-    )
-    table.children.append(
-        html.Tr(children=[
-            html.Td(children=format_values(args[col])) for col in features
-        ])
-    )
-    return table
-
 def reformat_sample_for_model(d):
   d = {x: d[x] for x in d if x not in ['description','isFraud','predict']}
   v_list = []
@@ -142,120 +120,80 @@ def reformat_sample_for_model(d):
     v_list.append(float(d['V'+str(i+1)]))
   return {"time":float(d["Time"]),"amount":float(d["Amount"]),"v":v_list}
     
-#df = pd.read_csv("/home/cdsw/data/creditcard.csv", nrows=1000)
+#### Get sample records.
 
-#### Get 4 sample records, one of each kind,
+data_sample = data.sample(frac=0.02, replace=False)
 
 all_recs = []
 
-for record in json.loads(data.to_json(orient='records')):
+for record in json.loads(data_sample.to_json(orient='records')):
   model_prediction = get_prediction_from_model(record)
   record.update({"prediction" : model_prediction})
   all_recs.append(record)
 
 df_updated = pd.DataFrame(all_recs)
 
-df_updated
+df = df_updated[['prediction','Class','Time','Amount','V1','V2','V3','V4','V5','V6','V7','V8']]
 
-features = ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount']
+df['prediction'] = df['prediction'].replace({False: 0, True: 1})
 
-sample1 = format_sample(df_updated.query('(Class == 0) & (prediction == False)').iloc[0], 'true inlier')
-sample2 = format_sample(df_updated.query('(Class == 1) & (prediction == True)').iloc[0], 'true outlier')
-sample3 = format_sample(df_updated.query('(Class == 0) & (prediction == True)').iloc[0], 'false outlier')
-sample4 = format_sample(df_updated.query('(Class == 1) & (prediction == False)').iloc[0], 'false inlier')
-
-samples = {'sample1': sample1,
-           'sample2': sample2,
-           'sample3': sample3,
-           'sample4': sample4}
-
-  
 ## The DASH Application  
-  
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+import dash_table
+
 # HTML layout
-app.layout = html.Div(children=[
-    html.H1(children='CML Fraud Detection Template Project'),
 
-    html.Div(children='''
-        Pick a sample data point and see whether our anomaly detection model decides
-        it's a fraudulent transaction
-    ''',
-    style={'margin-bottom': '40px'}),
+app.layout = html.Div([    
+  html.H1(children='CML Fraud Detection Prototype'),
+  #html.Button('Update Table', id='submit-val', n_clicks=0),
+  dash_table.DataTable(
+        id='table',
+        columns=[{"name": i, "id": i} for i in df.columns],
+        data=df.to_dict('records'),
+        style_data_conditional=[
+           {
+              'if': {'filter_query': '{Class} = 0 && {prediction} = 0',
+                    'column_id': ['Class','prediction']
+                },
+                'backgroundColor': 'lightskyblue',
+                'color': 'white'
+            },
+            {
+              'if': {'filter_query': '{Class} = 1 && {prediction} = 1',
+                    'column_id': ['Class','prediction']
+                },
+                'backgroundColor': 'crimson',
+                'color': 'white'
+            },
+            {
+              'if': {'filter_query': '{Class} != {prediction}',
+                     'column_id': ['Class','prediction']
+                },
+                'backgroundColor': 'coral',
+                'color': 'white'
+            }
 
-    html.Label('Sample Data'),
-    dcc.Dropdown(
-        options=[
-            {'label': 'Not Fraud', 'value': 'sample1'},
-            {'label': 'Fraud', 'value': 'sample2'},
-            {'label': 'Incorrectly labeled Fraud', 'value': 'sample3'},
-            {'label': 'Incorrectly labeled Not Fraud', 'value': 'sample4'},
-        ],
-        value='sample1',
-        id='switcher',
-        searchable=False,
-        clearable=False,
-        style={'width': '50%'},
-    ),
+        ]
 
-    html.Div(children=make_table(samples['sample1']), id='values'),
-
-    html.Div(children=[
-        html.Span(children='Fraud? ',
-                  style={'font-weight': 'bold',
-                         'display': 'inline-block',
-                         'padding': '20px',
-                         }),
-        html.Span(children=str(samples['sample1']['isFraud']), id='true'),
-    ]),
-
-    html.Div(children=[
-        html.Span(children='Predicted Fraud? ',
-                  style={'font-weight': 'bold',
-                         'display': 'inline-block',
-                         'padding': '20px',
-                         }),
-        html.Span(children=str(get_prediction_from_model(samples['sample1'])), id='prediction'),
-    ])
-])
-
+    )
+  ])
 
 @app.callback(
-    Output(component_id='true', component_property='children'),
-    [Input(component_id='switcher', component_property='value')]
+    Output('table', 'data'),
+    [Input('submit-val','n_clicks')]
 )
-def update_true(input_value):
-    return str(samples[input_value]['isFraud'])
-
-
-@app.callback(
-    Output(component_id='prediction', component_property='children'),
-    [Input(component_id='switcher', component_property='value')]
-)
-def update_prediction(input_value):
-    return str(get_prediction_from_model(samples[input_value]))
-
-
-@app.callback(
-    Output(component_id='values', component_property='children'),
-    [Input(component_id='switcher', component_property='value')]
-)
-def update_table(input_value):
-    return make_table(samples[input_value])
+def update_output():
+    data = df.to_dict('records')
+    return data
 
 # This reduces the the output to the console window
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
-
+  
 
 if __name__ == '__main__':
     app.run_server(debug=False,port=int(os.environ['CDSW_APP_PORT']),host='127.0.0.1')
-
-
-
-
-
-
