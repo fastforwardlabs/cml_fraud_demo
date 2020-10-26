@@ -144,7 +144,7 @@ class autoencoder(nn.Module):
 
 ### Experiments options
 # If you are running this as an experiment, pass the cv, solver and max_iter values
-# as arguments in that order. e.g. `5 lbfgs 100`.
+# as arguments in that order. e.g. `256 0.01 100`.
 
 if len (sys.argv) == 4:
   try:
