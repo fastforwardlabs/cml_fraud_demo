@@ -1,0 +1,118 @@
+name: CML Fraud Demo
+description: Prototype to demonstrate use of ML to identify fraudulent transactions
+author: Cloudera Engineer
+specification_version: 1.0
+prototype_version: 1.0
+date: "2020-09-29"
+api_version: 1
+
+tasks:
+  - type: create_job
+    name: Install dependencies
+    entity_label: install_deps
+    script: 0_bootstrap.py
+    arguments: None
+    cpu: 1
+    memory: 4
+    short_summary: Job to install dependencies and download training data.
+    environment:
+      TASK_TYPE: CREATE/RUN_JOB
+    kernel: python3
+
+  - type: run_job
+    entity_label: install_deps
+    short_summary: Running install dependencies training job.
+    long_summary: >-
+      Running the job to install dependencies.
+
+  - type: create_job
+    name: Train Fraud Model
+    entity_label: train_model
+    script: 3_model_train.py
+    arguments: None
+    short_summary: Job to train model.
+    environment:
+      TASK_TYPE: CREATE/RUN_JOB
+    kernel: python3
+
+  - type: run_job
+    entity_label: train_model
+    short_summary: Run model train job.
+    long_summary: Running job to train model.
+
+  - type: create_model
+    name: Create Fraud Model API Endpoint
+    entity_label: fraud_model
+    description: This model API endpoint predicts fraud
+    short_summary: Create the fraud model prediction API endpoint
+    access_key_environment_variable: SHTM_ACCESS_KEY
+    default_resources:
+      cpu: 1
+      memory: 2
+    default_replication_policy:
+      type: fixed
+      num_replicas: 1
+
+  - type: build_model
+    name: Build Fraud Model Endpoint
+    entity_label: fraud_model
+    comment: Build churn model
+    examples:
+      - request:
+          {
+            "v":
+              [
+                -1.3598071336738,
+                -0.0727811733098497,
+                2.53634673796914,
+                1.37815522427443,
+                -0.338320769942518,
+                0.462387777762292,
+                0.239598554061257,
+                0.0986979012610507,
+                0.363786969611213,
+                0.0907941719789316,
+                -0.551599533260813,
+                -0.617800855762348,
+                -0.991389847235408,
+                -0.311169353699879,
+                1.46817697209427,
+                -0.470400525259478,
+                0.207971241929242,
+                0.0257905801985591,
+                0.403992960255733,
+                0.251412098239705,
+                -0.018306777944153,
+                0.277837575558899,
+                -0.110473910188767,
+                0.0669280749146731,
+                0.128539358273528,
+                -0.189114843888824,
+                0.133558376740387,
+                -0.0210530534538215,
+              ],
+            "time": 0,
+            "amount": 149.62,
+          }
+        response: ""
+    target_file_path: 4_model_deploy.py
+    target_function_name: predict
+    kernel: python3
+    environment_variables:
+      TASK_TYPE: CREATE/BUILD/DEPLOY_MODEL
+
+  - type: deploy_model
+    name: fraud_model
+    entity_label: fraud_model
+    cpu: 1
+    gpu: 0
+    environment_variables:
+      TASK_TYPE: CREATE/BUILD/DEPLOY_MODEL
+
+  - type: start_application
+    name: Application to serve Fraud front app UI
+    subdomain: fraud
+    script: 5_application.py
+    environment_variables:
+      TASK_TYPE: START_APPLICATION
+    kernel: python3
