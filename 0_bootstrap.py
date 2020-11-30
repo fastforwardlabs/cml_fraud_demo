@@ -50,5 +50,3 @@ except:
 !hdfs dfs -mkdir -p $STORAGE/datalake/data
 !hdfs dfs -mkdir -p $STORAGE/datalake/data/anomalydetection
 !hdfs dfs -copyFromLocal /home/cdsw/data/creditcard.csv $STORAGE/datalake/data/anomalydetection/creditcard.csv
-
-!rm /home/cdsw/data/creditcard.csv
