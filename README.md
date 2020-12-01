@@ -44,7 +44,7 @@ DataLake (e.g. `s3a://my-default-bucket` or `abfs://my-name@mystorage.dfs.core.w
 It will also upload the data used in the 
 project to `$STORAGE/datalake/data/churn/`. The original file comes as part of this 
 git repo in the `raw` folder.
-  
+
 ***Deploy the Complete Project***
 
 If you just wish build the project artifacts without going through each step manually, 
@@ -68,8 +68,8 @@ will end up with a running application.
 Just to reiterate that you have run the bootstrap for this project before anything else. 
 So make sure you run step 0 first. 
 
-Open the file `0_bootstrap.py` in a normal workbench python3 session. You only need a 
-1 CPU / 2 GB instance. Then **Run > Run All Lines**
+Open the file `0_bootstrap.py` in a normal workbench python3 session. You will need a 
+2 CPU / 4 GB instance. Then **Run > Run All Lines**
 
 ### 1 Ingest Data
 This script will read in the data csv from the file uploaded to the object store (s3/adls) setup 

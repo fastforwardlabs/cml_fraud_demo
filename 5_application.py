@@ -81,29 +81,29 @@ from pyspark.sql import SparkSession
 import pandas as pd
 import requests
 
-spark = SparkSession\
+try:
+  spark = SparkSession\
     .builder\
     .appName("PythonSQL")\
     .master("local[*]")\
     .getOrCreate()
 
-try:
-    spark_df = spark.sql("SELECT * FROM default.cc_data")
-    class1_df = spark_df.filter("Class == 1")
-    class0_df = spark_df.filter("Class == 0").limit(2000)
-    sample_df = class1_df.union(class0_df)
-    data = sample_df.toPandas()
+  spark_df = spark.sql("SELECT * FROM default.cc_data")
+  class1_df = spark_df.filter("Class == 1")
+  class0_df = spark_df.filter("Class == 0").limit(2000)
+  sample_df = class1_df.union(class0_df)
+  data = sample_df.toPandas()
 except:
-    all_data = pd.read_csv("/home/cdsw/data/creditcardfraud.zip")
-    class1_pdf = all_data[all_data.Class == 1]
-    class0_pdf = all_data[all_data.Class == 0].iloc[:2000]
-    data_ = class1_pdf.append(class0_pdf)
+  all_data = pd.read_csv("/home/cdsw/data/creditcardfraud.zip")
+  class1_pdf = all_data[all_data.Class == 1]
+  class0_pdf = all_data[all_data.Class == 0].iloc[:2000]
+  data = class1_pdf.append(class0_pdf)
     
     
 features = list(data.columns.values)
 features.remove('Class')
 
-access_key = "mperto28a8xnul81g7w58xvy3qbplerw";
+access_key = os.environ['SHTM_ACCESS_KEY'];
 
 # helper functions
 model_host = os.getenv("CDSW_API_URL").split(

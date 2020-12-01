@@ -2,7 +2,6 @@
 
 ### Install the requirements
 !bash cdsw-build.sh
-!pip3 install dash
 
 ### Download the data file and save it in the specified directory
 
@@ -33,12 +32,14 @@ cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)
 try : 
   storage=os.environ["STORAGE"]
 except:
-  tree = ET.parse('/etc/hadoop/conf/hive-site.xml')
-  root = tree.getroot()
-    
-  for prop in root.findall('property'):
-    if prop.find('name').text == "hive.metastore.warehouse.dir":
+  if os.path.exists("/etc/hadoop/conf/hive-site.xml"):
+    tree = ET.parse('/etc/hadoop/conf/hive-site.xml')
+    root = tree.getroot()
+    for prop in root.findall('property'):
+      if prop.find('name').text == "hive.metastore.warehouse.dir":
         storage = prop.find('value').text.split("/")[0] + "//" + prop.find('value').text.split("/")[2]
+  else:
+    storage = "/user/" + os.getenv("HADOOP_USER_NAME")
   storage_environment_params = {"STORAGE":storage}
   storage_environment = cml.create_environment_variable(storage_environment_params)
   os.environ["STORAGE"] = storage
@@ -51,5 +52,3 @@ except:
 !hdfs dfs -mkdir -p $STORAGE/datalake/data
 !hdfs dfs -mkdir -p $STORAGE/datalake/data/anomalydetection
 !hdfs dfs -copyFromLocal /home/cdsw/data/creditcard.csv $STORAGE/datalake/data/anomalydetection/creditcard.csv
-
-!rm /home/cdsw/data/creditcard.csv
