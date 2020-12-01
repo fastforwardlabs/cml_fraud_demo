@@ -25,22 +25,22 @@ tasks:
     long_summary: >-
       Running the job to install dependencies.
 
-  - type: create_job
-    name: Train Fraud Model
-    entity_label: train_model
-    script: 3_model_train.py
-    arguments: None
-    cpu: 1
-    memory: 4
-    short_summary: Job to train model.
-    environment:
-      TASK_TYPE: CREATE/RUN_JOB
-    kernel: python3
+  # - type: create_job
+  #   name: Train Fraud Model
+  #   entity_label: train_model
+  #   script: 3_model_train.py
+  #   arguments: None
+  #   cpu: 1
+  #   memory: 4
+  #   short_summary: Job to train model.
+  #   environment:
+  #     TASK_TYPE: CREATE/RUN_JOB
+  #   kernel: python3
 
-  - type: run_job
-    entity_label: train_model
-    short_summary: Run model train job.
-    long_summary: Running job to train model.
+  # - type: run_job
+  #   entity_label: train_model
+  #   short_summary: Run model train job.
+  #   long_summary: Running job to train model.
 
   - type: create_model
     name: Create Fraud Model API Endpoint
