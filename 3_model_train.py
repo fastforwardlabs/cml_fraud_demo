@@ -157,7 +157,7 @@ if len (sys.argv) == 4:
 else:
     batch_size = 256
     lr = 0.01 
-    num_epochs = 50
+    num_epochs = 100
 
 # Define data loader
     
