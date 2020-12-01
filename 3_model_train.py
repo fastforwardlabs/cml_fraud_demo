@@ -82,6 +82,7 @@
 
 from datetime import datetime
 import cdsw
+import sys
 import numpy as np
 import pandas as pd
 import torch
@@ -92,18 +93,18 @@ from pyspark.sql import SparkSession
 
 # load the data
 
-spark = SparkSession\
+try:
+  spark = SparkSession\
     .builder\
     .appName("PythonSQL")\
     .master("local[*]")\
     .getOrCreate()
 
-try:
-    spark_df = spark.sql("SELECT * FROM default.cc_data")
-    spark_df.printSchema()
-    data = spark_df.toPandas()
+  spark_df = spark.sql("SELECT * FROM default.cc_data")
+  spark_df.printSchema()
+  data = spark_df.toPandas()
 except:
-    data = pd.read_csv("/home/cdsw/data/creditcardfraud.zip")
+  data = pd.read_csv("/home/cdsw/data/creditcardfraud.zip")
 
 feature_names=data.columns.values[:-1]
 train_test_set = data[data.Class==0][feature_names]
@@ -225,8 +226,8 @@ with torch.no_grad():
     loss1=torch.sum((inputs1-outputs1)**2,dim=1).sqrt().log()
     loss1 = loss1.cpu()
     
-    pd.Series(loss1.numpy()).hist(bins=100)
-    pd.Series(loss2.numpy()).hist(bins=100)
+    # pd.Series(loss1.numpy()).hist(bins=100)
+    # pd.Series(loss2.numpy()).hist(bins=100)
 
 
 def precision_rate(split_point):
