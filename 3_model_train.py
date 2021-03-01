@@ -89,11 +89,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
-from pyspark.sql import SparkSession
+
 
 # load the data
 
 try:
+  from pyspark.sql import SparkSession
   spark = SparkSession\
     .builder\
     .appName("PythonSQL")\
